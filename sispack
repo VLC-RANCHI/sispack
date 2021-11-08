@@ -1,6 +1,87 @@
 #!/usr/bin/env bash
 
-strd_file=$HOME
-crtd_tmp='.SiS_success'
 
-dpkg-query --show --showformat='${Installed-Size} ${Package} ${source}\n' | sort -rh| awk -v dir_="$strd_file" -v file_="$crtd_tmp" '{printf "\t%.2f\t\t#auto_created_by_sispack\n",$1/1024>dir_"/"file_} {printf " \033[1;33;40m%.2f\033[35m Mb\033[0;1m  \033[36m%s\033[0m\t%s\n", $1/1024,$2,$3}' && awk '{split($1,a,","); sum += a[1]} END {print "\033[1m-------------------------------\n"sum" MB ===> " sum/1024" GB\n-------------------------------\033[0m"}' $strd_file/$crtd_tmp
+version='1.1'
+strd_dir=$HOME
+crtd_tmp='.sis_cache'
+arrng='-h'
+srtfl="$strd_dir/$crtd_tmp.txt"
+hrln='--------------------------------------------'
+
+execute(){
+    srtfl="$strd_dir/$crtd_tmp"
+    dpkg-query --show --showformat='${Installed-Size} ${Package} ${source}\n' | sort $arrng| awk -v dir_="$strd_dir" -v file_="$crtd_tmp" '{printf "\t%.2f\t\t#auto_created_by_sispack\n",$1/1024>dir_"/"file_} {printf " \033[1;33;40m %.2f \033[35m Mb\033[0;1m  \033[36m%s\033[0m\t%s\n", $1/1024,$2,$3}' && sum_total
+# awk '{split($1,a,","); sum += a[1]} END {print "\033[1m-------------------------------\n"sum" MB ===> " sum/1024" GB\n-------------------------------\033[0m"}' $strd_dir/$crtd_tmp
+}
+
+author(){
+echo -e "Created by:: Vishal_Kumar \nGithub Page: @vlc-ranchi
+\n[more...]\n\tType: Open Source \n\tWhy_created: It's a interest. \n\tBasedOn: BaShell 
+\tDate: 21/10/2021 \n\tCountry: INDIA \n\tPlace: RANCHI-INDIA 
+\nVishal Kumar:\t\"I am the creator of sispack. But component(s)\n\t\t that is/are used here is/are not created by me.\" "
+}
+
+sum_total(){
+    awk -v ot="$n" -v ln="$hrln" '{split($ot,a,","); sum += a[1]} END {print " \033[1m"ln"\n  \033[7mTotal:\033[0m\033[1m "sum" MB ===> " sum/1024" GB\n "ln" \033[0m"}' $srtfl
+}
+
+find_name(){
+    execute | grep $1 > $srtfl
+    n=2
+    cat $srtfl && sum_total 
+    rm $srtfl
+}
+
+if test $# -ge 1
+    then 
+        {
+            while getopts :farhvV opt; 
+            do
+                
+                case $opt in
+                    f )
+                    
+                        if test $# -eq 2
+                        then find_name $2
+                        else echo -e "Error while finding:\tenter file name to search. After[-f]" 
+                        fi
+                        exit 1
+                        ;;
+                    r )
+                        
+                        arrng='-hr' && execute
+                        exit 1
+                        ;;
+                    a )
+                        
+                        author
+                        exit 1
+                        ;;
+                    h ) 
+                        
+                        echo 'Sispack version: '$version'
+'$hrln'
+[ Options ]
+    -f      :   find/search specific subject.
+    -h      :   Help window | This page.
+    -r      :   reverse the output.
+    -a      :   See Author detail and more.
+    -v|-V   :   print Version.
+    
+Example: [ sispack -f name_to_search ]
+'$hrln
+                        exit 1
+                        ;;
+                    v|V ) echo $version
+                        ;;
+                    \? )
+                        
+                        echo 'sispack says: Invalid Input': $1
+                        exit 1
+                        ;;
+                        
+                esac
+            done
+        }
+else execute
+fi
